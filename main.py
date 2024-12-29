@@ -18,7 +18,7 @@ from rich.style import Style
 from rich.table import Table
 
 # Add reddit username here (without u/)
-_INSPECT_USER = 'HairReddit777'
+_INSPECT_USER = ''
 
 # Requirements
 _MIN_KARMA = 2000
