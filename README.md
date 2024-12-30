@@ -29,5 +29,9 @@ See user overview, reddit activity, and loan history
 
 ## Develop
 
+Because Textual uses the terminal to display the UI you need a second terminal to see logs.
+
 - Terminal A: `textual console`
 - Terminal B: `textual run --dev main.py`
+
+![Loan history](./docs/devmode.png)
