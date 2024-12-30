@@ -3,3 +3,4 @@ Lib
 .env
 pyvenv.cfg
 .idea
+__pycache__
