@@ -3,11 +3,10 @@ import time
 import datetime
 from collections import defaultdict
 from typing import List
-
 import praw
 import praw.models
 import os
-
+import sys
 import arrow
 from dotenv import load_dotenv
 import plotext as plt
@@ -16,9 +15,6 @@ from rich.console import Console
 from rich.progress import Progress
 from rich.style import Style
 from rich.table import Table
-
-# Add reddit username here (without u/)
-_INSPECT_USER = ''
 
 # Requirements
 _MIN_KARMA = 2000
@@ -39,9 +35,13 @@ def main():
     CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
     os.system('cls' if os.name == 'nt' else 'clear')
-
     console = Console()
     console.rule()
+
+    if len(sys.argv) < 2:
+        print('First argument must be the username you are inspecting (without u/ prefix)')
+        return
+    USER_NAME = sys.argv[1].strip()
 
     reddit = praw.Reddit(
         client_id=CLIENT_ID,
@@ -55,7 +55,7 @@ def main():
         task3 = progress.add_task('Fetching Loan History')
 
         # Fetching User Info
-        user: praw.models.Redditor = reddit.redditor(_INSPECT_USER)
+        user: praw.models.Redditor = reddit.redditor(USER_NAME)
         user_in_usl = _fetch_in_usl(user.name)
         progress.update(task1, completed=100.0)
 
@@ -71,10 +71,10 @@ def main():
         progress.update(task2, completed=100.0)
 
         # Fetching Loan History
-        loan_ids = _fetch_loan_ids()
+        loan_ids = _fetch_loan_ids(user)
         loan_activity = []
         for loan_id in loan_ids:
-            loan_activity.append(_fetch_loan_details(reddit, loan_id))
+            loan_activity.append(_fetch_loan_details(reddit, user, loan_id))
             progress.update(task3, completed=(len(loan_activity) / len(loan_ids)) * 100)
         loan_activity.sort(key=lambda r: r['basic']['created_at'])
         progress.update(task3, completed=100.0)
@@ -158,7 +158,7 @@ def _render_loan_history(console: Console, user: praw.models.Redditor, loan_acti
             _warn_if(ask_borrow_amount, lambda: ask_borrow_amount != borrow_amount),
             _warn_if(ask_repay_amount, lambda: ask_repay_amount != repaid_amount),
             _warn_if(ask_repay_date,
-                     lambda: ask_repay_date is not None and ask_repay_date < repaid_date),
+                     lambda: ask_repay_date is not None and repaid_date is not None and ask_repay_date < repaid_date),
             str(borrow_amount),
             str(repaid_amount),
             str(borrow_date),
@@ -195,24 +195,24 @@ def _render_activity_history(console: Console, comments: List[praw.models.Commen
     _plot_activity(comments, days_back=60)
 
 
-def _fetch_loan_ids():
-    lend_history = f"https://redditloans.com/api/loans?lender_name={_INSPECT_USER}"
+def _fetch_loan_ids(user: praw.models.Redditor):
+    lend_history = f"https://redditloans.com/api/loans?lender_name={user.name}"
     lend_ids = requests.get(lend_history).json()
 
-    borrow_history = f"https://redditloans.com/api/loans?borrower_name={_INSPECT_USER}"
+    borrow_history = f"https://redditloans.com/api/loans?borrower_name={user.name}"
     borrow_ids = requests.get(borrow_history).json()
 
     return lend_ids + borrow_ids
 
 
-def _fetch_loan_details(reddit: praw.Reddit, loan_id: int):
+def _fetch_loan_details(reddit: praw.Reddit, user: praw.models.Redditor, loan_id: int):
     # Fetch loan details from loans API
     loan_url = f"https://redditloans.com/api/loans/{loan_id}/detailed"
     record = requests.get(loan_url).json()
     for event in record['events']:
         if event['event_type'] == 'creation':
             record['creation_event'] = event
-    record['is_borrower'] = _INSPECT_USER.lower() == record['basic']['borrower']
+    record['is_borrower'] = user.name.lower() == record['basic']['borrower']
 
     # Fetch additional details from reddit comment
     record['basic']['ask_borrow_amount'] = None
@@ -225,14 +225,14 @@ def _fetch_loan_details(reddit: praw.Reddit, loan_id: int):
     post = reddit.submission(post_id)
 
     try:
-        borrow_res = re.match(r'.*]\s*\(([^)]+)\)', post.title,
-                              re.RegexFlag.IGNORECASE | re.RegexFlag.U)
+        borrow_res = re.match(r'.*?]\s*\(([^)]+?)\)', post.title,
+                              re.RegexFlag.IGNORECASE)
         if borrow_res:
             borrow_amount_s = borrow_res.group(1)
             record['basic']['ask_borrow_amount'] = _normalize_payment_amount(borrow_amount_s)
 
-        repay_res = re.match(r'.*\(repay(.*)(by|on)([^)]+)\)', post.title,
-                             re.RegexFlag.IGNORECASE | re.RegexFlag.U)
+        repay_res = re.match(r'.*\(repay([^)]+?)(,|by|on)([^)]+?)\)', post.title,
+                             re.RegexFlag.IGNORECASE)
         if repay_res:
             repay_amount_s = repay_res.group(1)
             repay_date_s = repay_res.group(3)
