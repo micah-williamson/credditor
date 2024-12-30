@@ -156,7 +156,8 @@ def _render_loan_history(console: Console, user: praw.models.Redditor, loan_acti
             _highlight_inspected_user(basic['borrower']),
             basic['currency_code'],
             _warn_if(ask_borrow_amount, lambda: ask_borrow_amount != borrow_amount),
-            _warn_if(ask_repay_amount, lambda: ask_repay_amount != repaid_amount),
+            _warn_if(ask_repay_amount,
+                     lambda: repaid_date is not None and ask_repay_amount != repaid_amount),
             _warn_if(ask_repay_date,
                      lambda: ask_repay_date is not None and repaid_date is not None and ask_repay_date < repaid_date),
             str(borrow_amount),
@@ -231,13 +232,14 @@ def _fetch_loan_details(reddit: praw.Reddit, user: praw.models.Redditor, loan_id
             borrow_amount_s = borrow_res.group(1)
             record['basic']['ask_borrow_amount'] = _normalize_payment_amount(borrow_amount_s)
 
-        repay_res = re.match(r'.*\(repay([^)]+?)(,|by|on)([^)]+?)\)', post.title,
+        repay_res = re.match(r'.*\(repay([^)]+?)(\(|,|by|on)([^)]+?)\)', post.title,
                              re.RegexFlag.IGNORECASE)
         if repay_res:
+            created_date = datetime.datetime.fromtimestamp(record['basic']['created_at']).date()
             repay_amount_s = repay_res.group(1)
             repay_date_s = repay_res.group(3)
             record['basic']['ask_repay_amount'] = _normalize_payment_amount(repay_amount_s)
-            record['basic']['ask_repay_date'] = _try_parse_date(repay_date_s)
+            record['basic']['ask_repay_date'] = _try_parse_date(repay_date_s, created_date)
     except Exception as e:
         raise Exception(f'Failed to parse: {post.title}') from e
 
@@ -278,23 +280,50 @@ def _plot_activity(points: List[praw.models.Comment], days_back=_ACTIVITY_DAYS_B
     plt.show()
 
 
-def _try_parse_date(date_string: str):
-    date_formats = [
-        "YYYY-MM-DD",
-        "DD-MM-YYYY",
-        "MM/DD/YYYY",
-        "MM/DD/YY",
-        "MM/D/YY",
-        "M/DD/YY",
-        "M/D/YY",
-        "YYYY/MM/DD",
-        "DD MMM YYYY",
-        "MMM DD, YYYY",
-        "DD.MM.YYYY",
+def _try_parse_date(date_string: str, date_hint: datetime.date):
+    month_variants = ['M', 'MM', 'MMM', 'MMMM']
+    day_variants = ['D', 'DD', 'Do']
+    year_variants = ['YY', 'YYYY']
+    variants = []
+
+    for m in month_variants:
+        for d in day_variants:
+            for y in year_variants:
+                variants.append((m, d, y))
+
+    templates = [
+        'YYYY-{M}-{D}',
+        '{D}-{M}-YYYY',
+        'YYYY/{M}/{D}',
+        '{M}/{D}/{Y}',
+        '{M} {D} {Y}',
+        '{M}. {D} {Y}',
+        '{M} {D}, {Y}',
+        '{M}/{D}',
+        '{M} {D}'
     ]
+
+    date_formats = set()
+    for template in templates:
+        for variant in variants:
+            (m, d, y) = variant
+            date_formats.add(template.replace('{M}', m).replace('{D}', d).replace('{Y}', y))
+
     for date_format in date_formats:
         try:
             parsed_date = arrow.get(date_string, date_format).date()
+
+            if parsed_date and parsed_date.year == 1:
+                # We parsed a date that was only a month/day (i.e. 12/25)
+                # We don't know what the year is, so we will guess based on the creation date
+                # Whichever guess is closer to the date_hint is the winner
+                guess_date_1 = datetime.date(date_hint.year, parsed_date.month, parsed_date.day)
+                guess_date_2 = datetime.date(date_hint.year + 1, parsed_date.month, parsed_date.day)
+
+                if abs((guess_date_1 - date_hint).days) < abs((guess_date_2 - date_hint).days):
+                    return guess_date_1
+                return guess_date_2
+
             return parsed_date
         except arrow.parser.ParserError as e:
             continue
