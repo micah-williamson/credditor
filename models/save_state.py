@@ -31,7 +31,9 @@ class SaveState:
         with open('data/save_state.dat', 'r') as file:
             json_str = file.read()
             dacite_config = Config(type_hooks={
-                datetime.date: lambda x: datetime.datetime.strptime(x, '%Y-%m-%d').date()})
+                datetime.date: lambda x: datetime.datetime.strptime(x, '%Y-%m-%d').date(),
+                datetime.datetime: lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f')
+            })
             if json_str:
                 json_dict = json.loads(json_str)
                 SaveState.load_user_settings = from_dict(data_class=LoadUserSettings,

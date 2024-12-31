@@ -41,7 +41,7 @@ class RedditActivityWidget(Static):
         subreddit_counter = defaultdict(lambda: (0, 0))
         for comment in self.user_data.comments:
             count, karma = subreddit_counter[comment.subreddit]
-            subreddit_counter[comment.subreddit] = (count + 1, comment.karma)
+            subreddit_counter[comment.subreddit] = (count + 1, karma + comment.karma)
 
         subreddit_counts = list(subreddit_counter.items())
         subreddit_counts.sort(key=lambda sc: sc[1][0], reverse=True)

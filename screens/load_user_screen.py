@@ -81,6 +81,8 @@ class LoadUserScreen(Screen):
         progress_tracker.update(loan_history=100.0)
 
         self._user_data = UserData(
+            last_load=datetime.datetime.now(),
+            last_viewed=datetime.datetime.now(),
             username=user.name,
             created_at=datetime.datetime.fromtimestamp(user.created).date(),
             total_karma=user.total_karma,

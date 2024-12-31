@@ -45,6 +45,9 @@ class Comment:
 
 @dataclass
 class UserData:
+    last_load: datetime.datetime
+    last_viewed: datetime.datetime
+
     username: str
     created_at: datetime.date
     total_karma: int
