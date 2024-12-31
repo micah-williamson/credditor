@@ -34,13 +34,6 @@ class CredditorApp(App):
 
     def _action_load_user(self):
         username_input = self.query_one('#username_input', Input)
-        load_button = self.query_one('#load_button', Button)
-
-        # progress_tracker = self.query_one(ProgressTracker)
-        #
-        # load_button.disabled = True
-        # progress_tracker.display = True
-        # self.refresh(recompose=True)
 
         if not username_input.is_valid:
             self.notify('Invalid reddit username')
