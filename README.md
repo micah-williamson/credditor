@@ -11,7 +11,7 @@ in terminal.
 ## Usage
 
 Input reddit username and load
-![Input reddit username](./docs/loaduser1.png)
+![Input reddit username](./docs/homescreen.png)
 ![Loading screen](./docs/loaduser2.png)
 
 See user overview, reddit activity, and loan history
