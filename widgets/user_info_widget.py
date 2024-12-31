@@ -22,7 +22,7 @@ class UserInfoWidget(Static):
         super().__init__(**kwargs)
 
     def on_mount(self) -> None:
-        table = Table(title='User Info')
+        table = Table()
         table.add_column('field')
         table.add_column('value')
         table.add_column('')

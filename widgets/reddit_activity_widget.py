@@ -1,8 +1,9 @@
 import datetime
-from collections import Counter
+from collections import Counter, defaultdict
 
+from rich.table import Table
 from textual.containers import Vertical
-from textual.widgets import Static, Sparkline, Label
+from textual.widgets import Static, Sparkline, Label, Rule
 
 from const import ACTIVITY_DAYS_BACK
 from models.user_data import UserData
@@ -26,10 +27,38 @@ class RedditActivityWidget(Static):
         super().__init__(**kwargs)
 
     def on_mount(self) -> None:
-        self._plot('Comment Activity', ACTIVITY_DAYS_BACK)
-        self._plot('Comment Activity', 60)
+        self.mount(self._get_activity_chart('Comment Activity', ACTIVITY_DAYS_BACK))
+        self.mount(self._get_activity_chart('Comment Activity', 60))
+        self.mount(Rule(line_style='heavy'))
+        self.mount(self._get_subreddit_table())
 
-    def _plot(self, label: str, days_back: int):
+    def _get_subreddit_table(self):
+        table = Table()
+        table.add_column('subreddit')
+        table.add_column('comments')
+        table.add_column('comment karma')
+
+        subreddit_counter = defaultdict(lambda: (0, 0))
+        for comment in self.user_data.comments:
+            count, karma = subreddit_counter[comment.subreddit.display_name]
+            subreddit_counter[comment.subreddit.display_name] = (count + 1, comment.score)
+
+        subreddit_counts = list(subreddit_counter.items())
+        subreddit_counts.sort(key=lambda sc: sc[1][0], reverse=True)
+
+        for subreddit_count in subreddit_counts:
+            subreddit_uri = f'r/{subreddit_count[0]}'
+            table.add_row(
+                f'[link=https://reddit.com/{subreddit_uri}]{subreddit_uri}[/]',
+                str(subreddit_count[1][0]),
+                str(subreddit_count[1][1])
+            )
+
+        container = Static()
+        container.update(table)
+        return container
+
+    def _get_activity_chart(self, label: str, days_back: int):
         points = self.user_data.comments
 
         start_day = (datetime.datetime.now() - datetime.timedelta(days=days_back)).date()
@@ -55,4 +84,4 @@ class RedditActivityWidget(Static):
         row.compose_add_child(Label(f'{label} ({days_back}d)'))
         row.compose_add_child(Label(f'[MIN={min_}] [MAX={max_}] [MEAN={mean_}] [MODE={mode_}]'))
         row.compose_add_child(Sparkline(list(buckets.values())))
-        self.mount(row)
+        return row
