@@ -4,3 +4,4 @@ Lib
 pyvenv.cfg
 .idea
 __pycache__
+data

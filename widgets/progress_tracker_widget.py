@@ -1,7 +1,7 @@
 from typing import Optional
 
 from textual.app import ComposeResult
-from textual.containers import Vertical, Horizontal, Center, Middle
+from textual.containers import Vertical
 from textual.widgets import Static, ProgressBar, Label
 
 

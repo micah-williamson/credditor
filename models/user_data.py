@@ -2,8 +2,6 @@ import datetime
 from dataclasses import dataclass
 from typing import List, Optional
 
-import asyncpraw.models
-
 
 @dataclass
 class LoanRequest:
@@ -38,9 +36,21 @@ class UserLoan:
 
 
 @dataclass
+class Comment:
+    id: str
+    subreddit: str
+    created_at: datetime.date
+    karma: int
+
+
+@dataclass
 class UserData:
-    user: asyncpraw.models.Redditor
-    comments: List[asyncpraw.models.Comment]
+    username: str
+    created_at: datetime.date
+    total_karma: int
+    comment_karma: int
+
+    comments: List[Comment]
     loan_history: List[UserLoan]
 
     # If the user is in the universal scammer list

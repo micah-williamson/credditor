@@ -40,8 +40,8 @@ class RedditActivityWidget(Static):
 
         subreddit_counter = defaultdict(lambda: (0, 0))
         for comment in self.user_data.comments:
-            count, karma = subreddit_counter[comment.subreddit.display_name]
-            subreddit_counter[comment.subreddit.display_name] = (count + 1, comment.score)
+            count, karma = subreddit_counter[comment.subreddit]
+            subreddit_counter[comment.subreddit] = (count + 1, comment.karma)
 
         subreddit_counts = list(subreddit_counter.items())
         subreddit_counts.sort(key=lambda sc: sc[1][0], reverse=True)
@@ -59,13 +59,12 @@ class RedditActivityWidget(Static):
         return container
 
     def _get_activity_chart(self, label: str, days_back: int):
-        points = self.user_data.comments
+        comments = self.user_data.comments
 
         start_day = (datetime.datetime.now() - datetime.timedelta(days=days_back)).date()
 
         # Trim and normalize point data
-        points = [datetime.datetime.fromtimestamp(p.created_utc).date() for p in points]
-        points = [p for p in points if p >= start_day]
+        points = [c.created_at for c in comments if c.created_at >= start_day]
 
         # Fill buckets
         buckets = {start_day + datetime.timedelta(days=i): 0 for i in range(days_back + 1)}

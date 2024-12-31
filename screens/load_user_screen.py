@@ -11,14 +11,15 @@ from textual.screen import Screen
 import aiohttp
 
 from const import ACTIVITY_DAYS_BACK, COMMENT_LIMIT
-from models.user_data import UserData, UserLoan, LoanRequest
+from models.load_user_settings import LoadUserSettings
+from models.user_data import UserData, UserLoan, LoanRequest, Comment
 from widgets.progress_tracker_widget import ProgressTrackerWidget
 
 
 class LoadUserScreen(Screen):
 
-    def __init__(self, username: str) -> None:
-        self.username = username.replace('u/', '')
+    def __init__(self, load_user_settings: LoadUserSettings) -> None:
+        self.username = load_user_settings.username
         super().__init__()
 
     def on_mount(self):
@@ -55,14 +56,19 @@ class LoadUserScreen(Screen):
         progress_tracker.update(user_info=100.0)
 
         # Fetching Comment History
-        date_floor = datetime.datetime.now() - datetime.timedelta(days=ACTIVITY_DAYS_BACK)
-        comment_buffer = []
+        date_floor = (
+                datetime.datetime.today() - datetime.timedelta(days=ACTIVITY_DAYS_BACK)).date()
+        comments: List[Comment] = []
+        comment: asyncpraw.models.Comment
         async for comment in user.comments.new(limit=COMMENT_LIMIT):
-            comment_buffer.append(comment)
-            progress_tracker.update(reddit_activity=(len(comment_buffer) / COMMENT_LIMIT) * 100)
-        comments: List[asyncpraw.models.Comment] = [x for x in comment_buffer if
-                                                    datetime.datetime.fromtimestamp(
-                                                        x.created_utc) >= date_floor]
+            comments.append(Comment(
+                id=comment.id,
+                subreddit=comment.subreddit.display_name,
+                created_at=datetime.datetime.fromtimestamp(comment.created_utc).date(),
+                karma=comment.score
+            ))
+            progress_tracker.update(reddit_activity=(len(comments) / COMMENT_LIMIT) * 100)
+        comments = [c for c in comments if c.created_at >= date_floor]
         progress_tracker.update(reddit_activity=100.0)
 
         # Fetching Loan History
@@ -75,7 +81,10 @@ class LoadUserScreen(Screen):
         progress_tracker.update(loan_history=100.0)
 
         self._user_data = UserData(
-            user=user,
+            username=user.name,
+            created_at=datetime.datetime.fromtimestamp(user.created).date(),
+            total_karma=user.total_karma,
+            comment_karma=user.comment_karma,
             comments=comments,
             loan_history=loan_history,
             is_in_usl=user_in_usl

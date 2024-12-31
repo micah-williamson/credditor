@@ -1,3 +1,4 @@
+import datetime
 import time
 
 from rich.style import Style
@@ -27,20 +28,16 @@ class UserInfoWidget(Static):
         table.add_column('value')
         table.add_column('')
 
-        user = self.user_data.user
+        age_days = (datetime.datetime.today().date() - self.user_data.created_at).days
 
-        now = time.time()
-        age = now - user.created
-        age_days = round(age / 86400)
-
-        table.add_row('Name', user.name)
+        table.add_row('Name', self.user_data.username)
         table.add_row('Account Age', str(age_days),
                       style=_RED_FLAG if age_days < _MIN_AGE_DAYS else None)
-        table.add_row('Total Karma', str(user.total_karma),
-                      style=_RED_FLAG if user.total_karma < _MIN_KARMA else None)
-        table.add_row('Comment Karma', str(user.comment_karma),
-                      style=_RED_FLAG if user.comment_karma < _MIN_COMMENT_KARMA else None)
+        table.add_row('Total Karma', str(self.user_data.total_karma),
+                      style=_RED_FLAG if self.user_data.total_karma < _MIN_KARMA else None)
+        table.add_row('Comment Karma', str(self.user_data.comment_karma),
+                      style=_RED_FLAG if self.user_data.comment_karma < _MIN_COMMENT_KARMA else None)
         table.add_row('USL Status', 'FOUND' if self.user_data.is_in_usl else 'NOT FOUND',
-                      f'https://www.universalscammerlist.com/?username={user.name}',
+                      f'https://www.universalscammerlist.com/?username={self.user_data.username}',
                       style=_RED_FLAG if self.user_data.is_in_usl else None)
         self.update(table)

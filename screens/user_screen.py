@@ -1,21 +1,11 @@
-import datetime
-import os
-import re
-from typing import List
-
-import asyncpraw
-import asyncpraw.models
-from dotenv import load_dotenv
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.screen import Screen
-import aiohttp
-from textual.widgets import Footer, Button, ContentSwitcher, Static, Label
+from textual.widgets import Footer, Button, ContentSwitcher
 
-from models.user_data import UserData, UserLoan, LoanRequest
+from models.user_data import UserData
 from widgets.loan_history_widget import LoanHistoryWidget
-from widgets.progress_tracker_widget import ProgressTrackerWidget
 from widgets.reddit_activity_widget import RedditActivityWidget
 from widgets.user_info_widget import UserInfoWidget
 

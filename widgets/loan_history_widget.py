@@ -11,11 +11,10 @@ class LoanHistoryWidget(Static):
         super().__init__(**kwargs)
 
     def on_mount(self) -> None:
-        user = self.user_data.user
         loan_history = self.user_data.loan_history
 
         def _highlight_inspected_user(username: str) -> str:
-            return f'[bold blue]{username}[/]' if username.lower() == user.name.lower() else username
+            return f'[bold blue]{username}[/]' if username.lower() == self.user_data.username.lower() else username
 
         def _warn_if(value, predicate):
             return f'[yellow]{value}[/]' if predicate() else str(value)

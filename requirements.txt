@@ -5,3 +5,4 @@ rich==13.9.4
 textual==1.0.0
 textual-dev==1.7.0
 aiohttp==3.11.11
+dacite==1.8.1
