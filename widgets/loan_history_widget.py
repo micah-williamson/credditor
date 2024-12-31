@@ -49,7 +49,7 @@ class LoanHistoryWidget(Static):
                          lambda: row.loan_request.created_at != row.borrow_date),
                 _warn_if(row.loan_request.borrow_amount,
                          lambda: row.loan_request.borrow_amount != row.borrow_amount),
-                row.loan_request.repay_amount,
+                str(row.loan_request.repay_amount),
                 _warn_if(row.loan_request.repay_date,
                          lambda: row.loan_request.repay_date is not None and row.repaid_date is not None and row.loan_request.repay_date < row.repaid_date),
                 f'[link={row.loan_request.permalink}]post[/]',

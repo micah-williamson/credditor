@@ -151,7 +151,11 @@ class LoadUserScreen(Screen):
                     loan_request_repay_amount = self._normalize_payment_amount(repay_amount_s)
                     loan_request_repay_date = self._try_parse_date(repay_date_s, created_date)
             except Exception as e:
-                raise Exception(f'Failed to parse: {post.title}') from e
+                self.app.notify(
+                    'Exception occurred parsing loan request post. Check logs for details',
+                    severity='error')
+                self.app.log.error(f'Failed to parse: {post.title}')
+                self.app.log.error(f'Error: {e}')
 
             return UserLoan(
                 lender=lender,
