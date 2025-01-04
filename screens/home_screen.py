@@ -35,7 +35,7 @@ class HomeScreen(Screen):
                     Function(lambda v: len(v) > 2, 'Must be at least 3 chars')
                 ],
             )
-            yield Button(id='load_button', label='Load', action='app.load_user')
+            yield Button(id='load_button', label='Load', action='screen.load_user')
 
         # Recently Loaded/Cached User Table
         yield Rule()
