@@ -32,6 +32,7 @@ class LoanHistoryWidget(Static):
         table.add_column('req amt', justify='right')
         table.add_column('rq repay amt', justify='right')
         table.add_column('rq repay dt', justify='right')
+        table.add_column('installments', justify='right')
         table.add_column('link')
 
         for row in loan_history:
@@ -51,6 +52,8 @@ class LoanHistoryWidget(Static):
                 str(row.loan_request.repay_amount),
                 _warn_if(row.loan_request.repay_date,
                          lambda: row.loan_request.repay_date is not None and row.repaid_date is not None and row.loan_request.repay_date < row.repaid_date),
+                str(len(
+                    row.loan_request.repay_installments)) if row.loan_request.repay_installments else '?',
                 f'[link={row.loan_request.permalink}]post[/]',
             )
 

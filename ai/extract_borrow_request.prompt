@@ -1,4 +1,4 @@
-You are to extract the following: borrow_date, borrow_amount, currency_code, payment_types, repay_dates.
+You are to extract the following: borrow_date, borrow_amount, currency_code, payment_types, repay_installments.
 
 There may be multiple repay dates.
 The repay date will ALWAYS com after the current date.

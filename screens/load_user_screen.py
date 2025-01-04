@@ -154,6 +154,8 @@ class LoadUserScreen(Screen):
                 ai_out = extract_borrow_request(loan_request_created_at, post.title)
                 ai_json = json.loads(ai_out)
 
+                self.app.log.info(ai_out)
+
                 loan_request_borrow_amount = ai_json['borrow_amount']
                 loan_request_payment_types = ai_json.get('payment_types') or []
 
@@ -161,8 +163,6 @@ class LoadUserScreen(Screen):
                     if dt is None:
                         return None
                     return datetime.datetime.strptime(dt, '%Y-%m-%d').date()
-
-                print(ai_json)
 
                 loan_request_repay_installments = [
                     LoanInstallment(
