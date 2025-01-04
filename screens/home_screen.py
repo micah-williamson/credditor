@@ -74,7 +74,10 @@ class HomeScreen(Screen):
 
     def _action_handle_delete(self):
         cached_user_list = self.query_one(ListView)
-        selected_user = self.recent_users[cached_user_list.index]
+        self._action_handle_delete_index(cached_user_list.index)
+
+    def _action_handle_delete_index(self, idx):
+        selected_user = self.recent_users[idx]
         SaveState.user_data.pop(selected_user.username)
         SaveState.save()
         self._refresh_user_list()
@@ -116,10 +119,11 @@ class HomeScreen(Screen):
     def _refresh_user_list(self):
         user_list = self.query_one('#cached_user_list', ListView)
         user_list.clear()
-        for user in self.recent_users:
+        for (idx, user) in enumerate(self.recent_users):
             list_item = ListItem(classes='cached_user_row')
             list_item.compose_add_child(Label(user.username))
             list_item.compose_add_child(Label(humanize(user.last_load)))
             list_item.compose_add_child(Label(humanize(user.last_viewed)))
-            list_item.compose_add_child(Label(''))
+            list_item.compose_add_child(
+                Button('Delete', classes='compact', action=f'screen.handle_delete_index({idx})'))
             user_list.append(list_item)
