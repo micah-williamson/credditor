@@ -1,3 +1,4 @@
 #user_screen_content {
     height: 1fr;
+    overflow: hidden auto;
 }

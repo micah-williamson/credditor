@@ -31,7 +31,7 @@ class UserScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical(classes='header'):
-            with Horizontal(classes='autoheight'):
+            with Horizontal(classes='ghostpanel autoheight'):
                 with Vertical(classes='autoheight'):
                     yield Label('Username')
                     yield Label(self.user_data.username)
@@ -39,20 +39,19 @@ class UserScreen(Screen):
                     yield Label('Last Data Fetch')
                     yield Label(humanize(self.user_data.last_load))
                 with Vertical(classes='autoheight'):
-                    yield Label('')
                     yield Button('Refresh', classes='compact', action='screen.refresh_user')
 
             yield Rule()
 
-            with Horizontal(classes='autoheight'):
+            with Horizontal(classes='ghostpanel autoheight'):
                 yield Button('User Info', id='user_info')
                 yield Button('Reddit Activity', id='reddit_activity')
                 yield Button('Loan History', id='loan_history')
 
-        with ContentSwitcher(id='user_screen_content', initial='user_info'):
-            yield UserInfoWidget(id='user_info', user_data=self.user_data)
-            yield RedditActivityWidget(id='reddit_activity', user_data=self.user_data)
-            yield LoanHistoryWidget(id='loan_history', user_data=self.user_data)
+            with ContentSwitcher(id='user_screen_content', initial='user_info', classes='panel'):
+                yield UserInfoWidget(id='user_info', user_data=self.user_data)
+                yield RedditActivityWidget(id='reddit_activity', user_data=self.user_data)
+                yield LoanHistoryWidget(id='loan_history', user_data=self.user_data)
 
         yield Footer(show_command_palette=False)
 

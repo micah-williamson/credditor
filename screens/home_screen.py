@@ -29,7 +29,7 @@ class HomeScreen(Screen):
 
         # User Load Header
         with Static(classes="header"):
-            with Horizontal(classes="autoheight"):
+            with Horizontal(classes="ghostpanel autoheight"):
                 yield Input(
                     id='username_input',
                     placeholder='username',
@@ -41,18 +41,24 @@ class HomeScreen(Screen):
                 )
                 yield Button(id='load_button', label='Load', action='screen.load_user')
 
-        # Recently Loaded/Cached User Table
         yield Rule()
-        yield Label('Cached Users (by last viewed).')
-        yield Label('Use [↑][↓] to select a user. Use [Enter] to view or [Backspace ←] to delete.')
 
-        with Static(id='cached_user_list_header', classes='cached_user_row'):
-            yield Label('Username')
-            yield Label('Last Data Fetch')
-            yield Label('')
-            yield Label('')
+        # Recently Loaded/Cached User Table
 
-        yield ListView(id='cached_user_list')
+        with Static(classes='ghostpanel'):
+            yield Label('Cached Users (by last viewed).')
+            yield Label(
+                'Use [↑][↓] to select a user. Use [Enter] to view or [Backspace ←] to delete.')
+
+        with Static(classes='panel'):
+            with Static(classes='cached_user_row'):
+                yield Label('Username')
+                yield Label('Last Data Fetch')
+                yield Label('')
+                yield Label('')
+
+            yield ListView(id='cached_user_list', classes='autoheight')
+
         yield Footer(show_command_palette=False)
 
     def on_screen_resume(self, event_: ScreenResume):

@@ -3,6 +3,11 @@
     height: auto;
 }
 
+.auto {
+    height: auto;
+    width: auto;
+}
+
 .autoheight {
     height: auto;
 }
@@ -16,4 +21,15 @@ Button.compact {
     border: none;
     border-left: $border;
     border-right: $border;
+}
+
+.panel {
+    border: solid $border;
+    padding: 0 1;
+    margin: 1;
+}
+
+.ghostpanel {
+    padding: 0 1;
+    margin: 1;
 }
