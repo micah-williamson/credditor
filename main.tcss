@@ -1,36 +1,19 @@
-Container {
-    overflow: hidden hidden;
+.header {
+    dock: top;
     height: auto;
 }
 
-#login_box {
-    dock: top;
-    layout: horizontal;
-
-
-    #username_input {
-        width: 4fr;
-    }
-
-    #load_button {
-        width: 1fr;
-    }
+.autoheight {
+    height: auto;
 }
 
-#cached_user_list_header {
-    margin-top: 1;
+.autowidth {
+    width: auto;
 }
 
-.cached_user_row {
-    layout: horizontal;
-
-    Label {
-        width: 1fr;
-    }
-
-    Button {
-        width: 8;
-        height: 1;
-        border: none;
-    }
+Button.compact {
+    height: auto;
+    border: none;
+    border-left: $border;
+    border-right: $border;
 }

@@ -4,6 +4,7 @@ import time
 import arrow
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Horizontal
 from textual.screen import Screen
 from textual.validation import Function
 from textual.widgets import Footer, Button, Static, Input, Rule, Label, ListView, ListItem
@@ -12,6 +13,7 @@ from models.save_state import SaveState
 from models.user_data import UserData
 from screens.load_user_screen import LoadUserScreen
 from screens.user_screen import UserScreen
+from util.date import humanize
 
 
 class HomeScreen(Screen):
@@ -25,17 +27,18 @@ class HomeScreen(Screen):
         load_user_settings = SaveState.load_user_settings
 
         # User Load Header
-        with Static(id="login_box"):
-            yield Input(
-                id='username_input',
-                placeholder='username',
-                value=load_user_settings.username,
-                validators=[
-                    Function(lambda v: not v.startswith('u/'), 'Must not start with'),
-                    Function(lambda v: len(v) > 2, 'Must be at least 3 chars')
-                ],
-            )
-            yield Button(id='load_button', label='Load', action='screen.load_user')
+        with Static(classes="header"):
+            with Horizontal(classes="autoheight"):
+                yield Input(
+                    id='username_input',
+                    placeholder='username',
+                    value=load_user_settings.username,
+                    validators=[
+                        Function(lambda v: not v.startswith('u/'), 'Must not start with'),
+                        Function(lambda v: len(v) > 2, 'Must be at least 3 chars')
+                    ],
+                )
+                yield Button(id='load_button', label='Load', action='screen.load_user')
 
         # Recently Loaded/Cached User Table
         yield Rule()
@@ -106,9 +109,7 @@ class HomeScreen(Screen):
         for user in self.recent_users:
             list_item = ListItem(classes='cached_user_row')
             list_item.compose_add_child(Label(user.username))
-            list_item.compose_add_child(Label(
-                arrow.get(user.last_load, tzinfo=time.tzname[time.daylight]).humanize(
-                    arrow.now())))
+            list_item.compose_add_child(Label(humanize(user.last_load)))
             list_item.compose_add_child(Label(''))
             list_item.compose_add_child(Label(''))
             user_list.append(list_item)

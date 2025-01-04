@@ -6,35 +6,6 @@ from textual.widgets import Static, ProgressBar, Label
 
 
 class ProgressTrackerWidget(Static):
-    DEFAULT_CSS = """
-    #progress_container {
-        width: 1fr;
-        height: 1fr;
-    }
-    
-    .progress_row {
-    
-        width: auto;
-        margin: 3 0;
-        layout: horizontal;
-    
-    
-        Label {
-            content-align: right middle;
-            margin-right: 2;
-            width: 2fr;
-        }
-    
-        ProgressBar {
-            width: 5fr;
-        }
-    
-        .gutter {
-            width: 1fr;
-        }
-    }
-    """
-
     def compose(self) -> ComposeResult:
         with Vertical(id="progress_container"):
             with Static(classes="progress_row"):

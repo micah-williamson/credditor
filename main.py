@@ -5,7 +5,13 @@ from screens.home_screen import HomeScreen
 
 
 class CredditorApp(App):
-    CSS_PATH = 'main.tcss'
+    CSS_PATH = [
+        'main.tcss',
+        'screens/home_screen.tcss',
+        'screens/user_screen.tcss',
+        'widgets/progress_tracker_widget.tcss',
+        'widgets/reddit_activity_widget.tcss',
+    ]
 
     def on_mount(self):
         self.push_screen(HomeScreen())

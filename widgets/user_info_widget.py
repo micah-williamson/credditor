@@ -3,6 +3,7 @@ import time
 
 from rich.style import Style
 from rich.table import Table
+from textual.app import ComposeResult
 from textual.widgets import Static
 
 from models.user_data import UserData

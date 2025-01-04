@@ -1,0 +1,25 @@
+#username_input {
+    width: 4fr;
+}
+
+#load_button {
+    width: 1fr;
+}
+
+#cached_user_list_header {
+    margin-top: 1;
+}
+
+.cached_user_row {
+    layout: horizontal;
+
+    Label {
+        width: 1fr;
+    }
+
+    Button {
+        width: 8;
+        height: 1;
+        border: none;
+    }
+}

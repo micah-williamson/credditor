@@ -1,10 +1,11 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, Button, ContentSwitcher
+from textual.widgets import Footer, Button, ContentSwitcher, Label, Rule, Static
 
 from models.user_data import UserData
+from util.date import humanize
 from widgets.loan_history_widget import LoanHistoryWidget
 from widgets.reddit_activity_widget import RedditActivityWidget
 from widgets.user_info_widget import UserInfoWidget
@@ -16,17 +17,6 @@ _MIN_AGE_DAYS = 120
 
 
 class UserScreen(Screen):
-    DEFAULT_CSS = """
-    #user_screen_buttons {
-        dock: top;
-        height: auto;
-    }
-    
-    #user_screen_content {
-        height: 1fr;
-    }
-    """
-
     BINDINGS = [
         Binding(key='escape', action='go_back', description='Go back'),
     ]
@@ -36,10 +26,25 @@ class UserScreen(Screen):
         super().__init__()
 
     def compose(self) -> ComposeResult:
-        with Horizontal(id='user_screen_buttons'):
-            yield Button('User Info', id='user_info')
-            yield Button('Reddit Activity', id='reddit_activity')
-            yield Button('Loan History', id='loan_history')
+        # with Horizontal(classes='header'):
+        #     yield Button('User Info', id='user_info')
+        #     yield Button('Reddit Activity', id='reddit_activity')
+        #     yield Button('Loan History', id='loan_history')
+        with Vertical(classes='header'):
+            with Horizontal(classes='autoheight'):
+                with Vertical(classes='autoheight'):
+                    yield Label('Username')
+                    yield Label(self.user_data.username)
+                with Vertical(classes='autoheight'):
+                    yield Label('Last Data Fetch')
+                    yield Label(humanize(self.user_data.last_load))
+
+            yield Rule()
+
+            with Horizontal(classes='autoheight'):
+                yield Button('User Info', id='user_info')
+                yield Button('Reddit Activity', id='reddit_activity')
+                yield Button('Loan History', id='loan_history')
 
         with ContentSwitcher(id='user_screen_content', initial='user_info'):
             yield UserInfoWidget(id='user_info', user_data=self.user_data)

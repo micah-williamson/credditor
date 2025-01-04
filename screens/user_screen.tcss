@@ -1,0 +1,3 @@
+#user_screen_content {
+    height: 1fr;
+}

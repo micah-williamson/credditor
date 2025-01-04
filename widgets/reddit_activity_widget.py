@@ -10,17 +10,8 @@ from models.user_data import UserData
 
 
 class RedditActivityWidget(Static):
-    DEFAULT_CSS = """
-    .reddit_activity_row {
-        margin: 2 2;
-        height: auto;
+    CSS_PATH = []
     
-        Sparkline {
-            margin-top: 2;
-        }
-    }
-    """
-
     def __init__(self, user_data: UserData, **kwargs):
         self.user_data = user_data
         self.days_back = ACTIVITY_DAYS_BACK

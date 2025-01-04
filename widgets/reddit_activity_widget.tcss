@@ -1,0 +1,8 @@
+.reddit_activity_row {
+    margin: 2 2;
+    height: auto;
+
+    Sparkline {
+        margin-top: 2;
+    }
+}
