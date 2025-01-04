@@ -54,7 +54,7 @@ class HomeScreen(Screen):
             with Static(classes='cached_user_row'):
                 yield Label('Username')
                 yield Label('Last Data Fetch')
-                yield Label('')
+                yield Label('Last Viewed')
                 yield Label('')
 
             yield ListView(id='cached_user_list', classes='autoheight')
@@ -69,6 +69,7 @@ class HomeScreen(Screen):
     @property
     def recent_users(self):
         users = list(SaveState.user_data.values())
+        users.sort(key=lambda u: u.last_viewed, reverse=True)
         return users
 
     def _action_handle_delete(self):
@@ -119,6 +120,6 @@ class HomeScreen(Screen):
             list_item = ListItem(classes='cached_user_row')
             list_item.compose_add_child(Label(user.username))
             list_item.compose_add_child(Label(humanize(user.last_load)))
-            list_item.compose_add_child(Label(''))
+            list_item.compose_add_child(Label(humanize(user.last_viewed)))
             list_item.compose_add_child(Label(''))
             user_list.append(list_item)
