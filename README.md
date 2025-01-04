@@ -10,9 +10,8 @@ in terminal.
 
 ## Usage
 
-Input reddit username and load
-![Input reddit username](./docs/homescreen.png)
-![Loading screen](./docs/loaduser2.png)
+Load reddit user data by username
+![Homescreen](./docs/homescreen.png)
 
 See user overview, reddit activity, and loan history
 ![User info](./docs/userinfo.png)
@@ -36,7 +35,7 @@ Because Textual uses the terminal to display the UI you need a second terminal t
 - Terminal A: `textual console`
 - Terminal B: `textual run --dev main.py`
 
-![Loan history](./docs/devmode.png)
+![Dev Mode](./docs/devmode.png)
 
 ## Troubleshooting
 
