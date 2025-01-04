@@ -1,7 +1,8 @@
 import datetime
+import json
 import os
 import re
-from typing import List
+from typing import List, Optional
 
 import asyncpraw
 import asyncpraw.models
@@ -10,9 +11,10 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 import aiohttp
 
+from ai.borrow_request_extractor import extract_borrow_request
 from const import ACTIVITY_DAYS_BACK, COMMENT_LIMIT
 from models.load_user_settings import LoadUserSettings
-from models.user_data import UserData, UserLoan, LoanRequest, Comment
+from models.user_data import UserData, UserLoan, LoanRequest, Comment, LoanInstallment
 from widgets.progress_tracker_widget import ProgressTrackerWidget
 
 
@@ -130,6 +132,8 @@ class LoadUserScreen(Screen):
             loan_request_borrow_amount = None
             loan_request_repay_amount = None
             loan_request_repay_date = None
+            loan_request_repay_installments = []
+            loan_request_payment_types = []
 
             for event in record['events']:
                 if event['event_type'] == 'creation':
@@ -145,28 +149,43 @@ class LoadUserScreen(Screen):
             post = await reddit.submission(post_id)
             loan_request_created_at = datetime.datetime.fromtimestamp(post.created_utc).date()
 
+            ai_out = None
             try:
-                borrow_res = re.match(r'.*?]\s*\(([^)]+?)\)', post.title,
-                                      re.RegexFlag.IGNORECASE)
-                if borrow_res:
-                    borrow_amount_s = borrow_res.group(1)
-                    loan_request_borrow_amount = self._normalize_payment_amount(borrow_amount_s)
+                ai_out = extract_borrow_request(loan_request_created_at, post.title)
+                ai_json = json.loads(ai_out)
 
-                repay_res = re.match(r'.*\(repay([^)]+?)(\(|,|by|on)([^)]+?)\)', post.title,
-                                     re.RegexFlag.IGNORECASE)
-                if repay_res:
-                    created_date = datetime.datetime.fromtimestamp(
-                        record['basic']['created_at']).date()
-                    repay_amount_s = repay_res.group(1)
-                    repay_date_s = repay_res.group(3)
-                    loan_request_repay_amount = self._normalize_payment_amount(repay_amount_s)
-                    loan_request_repay_date = self._try_parse_date(repay_date_s, created_date)
+                loan_request_borrow_amount = ai_json['borrow_amount']
+                loan_request_payment_types = ai_json.get('payment_types') or []
+
+                def _try_parse_date(dt: Optional[str]):
+                    if dt is None:
+                        return None
+                    return datetime.datetime.strptime(dt, '%Y-%m-%d').date()
+
+                print(ai_json)
+
+                loan_request_repay_installments = [
+                    LoanInstallment(
+                        repay_amount=repay_installment.get('repay_amount'),
+                        repay_date=_try_parse_date(repay_installment.get('repay_date'))
+                    )
+                    for repay_installment in ai_json.get('repay_installments') or []
+                ]
+
+                repay_amounts = [inst.repay_amount for inst in loan_request_repay_installments if
+                                 inst.repay_amount is not None]
+                repay_dates = [inst.repay_date for inst in loan_request_repay_installments if
+                               inst.repay_date is not None]
+
+                loan_request_repay_amount = sum(repay_amounts) if repay_amounts else 0
+                loan_request_repay_date = max(repay_dates) if repay_dates else None
             except Exception as e:
                 self.app.notify(
                     'Exception occurred parsing loan request post. Check logs for details',
                     severity='error')
                 self.app.log.error(f'Failed to parse: {post.title}')
                 self.app.log.error(f'Error: {e}')
+                self.app.log.error(f'AI Output: {ai_out}')
 
             return UserLoan(
                 lender=lender,
@@ -182,6 +201,8 @@ class LoadUserScreen(Screen):
                     permalink=loan_request_permalink,
                     post_id=post_id,
                     borrow_amount=loan_request_borrow_amount,
+                    repay_installments=loan_request_repay_installments,
+                    payment_types=loan_request_payment_types,
                     repay_amount=loan_request_repay_amount,
                     repay_date=loan_request_repay_date
                 )
@@ -195,56 +216,3 @@ class LoadUserScreen(Screen):
             res = await session.get(
                 f'https://api.reddit.com/r/RegExrSwapBot/wiki/confirmations/{username.lower()}.json')
             return res.status != 404
-
-    def _try_parse_date(self, date_string: str, date_hint: datetime.date):
-        month_variants = ['M', 'MM', 'MMM', 'MMMM']
-        day_variants = ['D', 'DD', 'Do']
-        year_variants = ['YY', 'YYYY']
-        variants = []
-
-        for m in month_variants:
-            for d in day_variants:
-                for y in year_variants:
-                    variants.append((m, d, y))
-
-        templates = [
-            'YYYY-{M}-{D}',
-            '{D}-{M}-YYYY',
-            'YYYY/{M}/{D}',
-            '{M}/{D}/{Y}',
-            '{M} {D} {Y}',
-            '{M}. {D} {Y}',
-            '{M} {D}, {Y}',
-            '{M}/{D}',
-            '{M} {D}'
-        ]
-
-        date_formats = set()
-        for template in templates:
-            for variant in variants:
-                (m, d, y) = variant
-                date_formats.add(template.replace('{M}', m).replace('{D}', d).replace('{Y}', y))
-
-        for date_format in date_formats:
-            try:
-                parsed_date = datetime.datetime.strptime(date_string, date_format).date()
-
-                if parsed_date and parsed_date.year == 1:
-                    # We parsed a date that was only a month/day (i.e. 12/25)
-                    # We don't know what the year is, so we will guess based on the creation date
-                    # Whichever guess is closer to the date_hint is the winner
-                    guess_date_1 = datetime.date(date_hint.year, parsed_date.month, parsed_date.day)
-                    guess_date_2 = datetime.date(date_hint.year + 1, parsed_date.month,
-                                                 parsed_date.day)
-
-                    if abs((guess_date_1 - date_hint).days) < abs((guess_date_2 - date_hint).days):
-                        return guess_date_1
-                    return guess_date_2
-
-                return parsed_date
-            except Exception as e:
-                continue
-        return None
-
-    def _normalize_payment_amount(self, p: str):
-        return float(re.sub(r'[^\d\\.]', '', p.strip()))

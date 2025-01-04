@@ -25,6 +25,8 @@ See user overview, reddit activity, and loan history
 - Run activate script from scripts dir
 - Copy `.env.tpl` to `.env` and add reddit app credentials
 - Install python requirements `pip3 install -r requirements.txt`
+- Download [ollama](https://github.com/ollama/ollama?tab=readme-ov-file)
+- Run `ollama pull llama3.2`
 - Run with `python main.py {user_name}`
 
 ## Develop
@@ -35,3 +37,7 @@ Because Textual uses the terminal to display the UI you need a second terminal t
 - Terminal B: `textual run --dev main.py`
 
 ![Loan history](./docs/devmode.png)
+
+## Troubleshooting
+
+- If the app fails to start with a dacite error then delete the `data/` dir and try again

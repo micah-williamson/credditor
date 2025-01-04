@@ -4,6 +4,12 @@ from typing import List, Optional
 
 
 @dataclass
+class LoanInstallment:
+    repay_amount: Optional[float]
+    repay_date: Optional[datetime.date]
+
+
+@dataclass
 class LoanRequest:
     created_at: datetime.date
     permalink: str
@@ -12,6 +18,10 @@ class LoanRequest:
     # It's not always possible to extract the borrow details from the post so these fields are
     # optional
     borrow_amount: Optional[float]
+    repay_installments: List[LoanInstallment]
+    payment_types: Optional[List[str]]
+
+    # Represents the final repayment date and sum of repayment installments
     repay_amount: Optional[float]
     repay_date: Optional[datetime.date]
 
