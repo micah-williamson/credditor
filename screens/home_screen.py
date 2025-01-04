@@ -5,6 +5,7 @@ import arrow
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
+from textual.events import ScreenResume
 from textual.screen import Screen
 from textual.validation import Function
 from textual.widgets import Footer, Button, Static, Input, Rule, Label, ListView, ListItem
@@ -54,7 +55,9 @@ class HomeScreen(Screen):
         yield ListView(id='cached_user_list')
         yield Footer(show_command_palette=False)
 
-    def on_mount(self):
+    def on_screen_resume(self, event_: ScreenResume):
+        # Called anytime the screen is shown. Including when the screen stack is popped revealing
+        # this screen
         self._refresh_user_list()
 
     @property

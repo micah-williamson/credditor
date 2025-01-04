@@ -1,10 +1,14 @@
+from datetime import datetime
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Button, ContentSwitcher, Label, Rule, Static
 
+from models.save_state import SaveState
 from models.user_data import UserData
+from screens.load_user_screen import LoadUserScreen
 from util.date import humanize
 from widgets.loan_history_widget import LoanHistoryWidget
 from widgets.reddit_activity_widget import RedditActivityWidget
@@ -26,10 +30,6 @@ class UserScreen(Screen):
         super().__init__()
 
     def compose(self) -> ComposeResult:
-        # with Horizontal(classes='header'):
-        #     yield Button('User Info', id='user_info')
-        #     yield Button('Reddit Activity', id='reddit_activity')
-        #     yield Button('Loan History', id='loan_history')
         with Vertical(classes='header'):
             with Horizontal(classes='autoheight'):
                 with Vertical(classes='autoheight'):
@@ -38,6 +38,9 @@ class UserScreen(Screen):
                 with Vertical(classes='autoheight'):
                     yield Label('Last Data Fetch')
                     yield Label(humanize(self.user_data.last_load))
+                with Vertical(classes='autoheight'):
+                    yield Label('')
+                    yield Button('Refresh', classes='compact', action='screen.refresh_user')
 
             yield Rule()
 
@@ -55,6 +58,20 @@ class UserScreen(Screen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.query_one(ContentSwitcher).current = event.button.id
+
+    def _action_refresh_user(self):
+        username = self.user_data.username
+
+        load_user_settings = SaveState.load_user_settings
+        load_user_settings.username = username
+
+        self.app.push_screen(LoadUserScreen(load_user_settings), self._handle_refresh_user_result)
+
+    def _handle_refresh_user_result(self, user_data: UserData) -> None:
+        SaveState.user_data[user_data.username] = user_data
+        SaveState.save()
+        self.user_data = user_data
+        self.refresh(recompose=True)
 
     def _action_go_back(self):
         self.dismiss()
